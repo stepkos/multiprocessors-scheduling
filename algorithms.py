@@ -2,6 +2,7 @@ from config import *
 from task_supervisor import TaskSupervisor
 
 
+# noinspection DuplicatedCode
 class Algorithms:
 
     class Time:
@@ -60,9 +61,10 @@ class Algorithms:
             else:
                 # Algorithm main logic
                 for task in tasks_to_assign:
-                    for _ in range(LAZY_CALL_RANDOM_PROCESSORS_AMOUNT):
+                    processors = list(range(AMOUNT_OF_PROCESSORS))
+                    processors.remove(task.processor)
+                    for processor in random.sample(processors, LAZY_CALL_RANDOM_PROCESSORS_AMOUNT):
                         result.migrate_requests_amount += 1
-                        processor = random.randint(0, AMOUNT_OF_PROCESSORS - 1)
                         if processors_load[processor] < LAZY_LOAD_THRESHOLD:
                             task.processor = processor
                             processors_load[processor] += task.load_level
@@ -97,9 +99,10 @@ class Algorithms:
                     if processors_load[task.processor] < AMBITIOUS_LOAD_THRESHOLD:
                         processors_load[task.processor] += task.load_level
                     else:
-                        for _ in range(AMOUNT_OF_PROCESSORS): # TODO lojus bez powtorzen
+                        processors = list(range(AMOUNT_OF_PROCESSORS))
+                        processors.remove(task.processor)
+                        for processor in random.sample(processors, AMOUNT_OF_PROCESSORS - 1):
                             result.migrate_requests_amount += 1
-                            processor = random.randint(0, AMOUNT_OF_PROCESSORS - 1)
                             if processors_load[processor] < AMBITIOUS_LOAD_THRESHOLD:
                                 task.processor = processor
                                 processors_load[processor] += task.load_level
