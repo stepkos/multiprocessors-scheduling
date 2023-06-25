@@ -1,3 +1,4 @@
+import statistics
 from config import *
 from task_supervisor import TaskSupervisor
 
@@ -30,17 +31,18 @@ class Algorithms:
             return [load_sum / self.time.total for load_sum in self.processors_load_sum]
 
         @property
-        def system_load_sum(self):
-            return sum(self.processors_load_sum)
+        def processors_load_std(self):
+            return statistics.stdev(self.processors_load_avg)
 
         @property
         def system_load_avg(self):
-            return self.system_load_sum / AMOUNT_OF_PROCESSORS
+            return sum(self.processors_load_avg) / AMOUNT_OF_PROCESSORS
 
         def __str__(self):
             return f"----- {self.algo_name.upper()} ----- \n" \
-                   f"processors_load_avg: {self.processors_load_avg}, \n" \
-                   f"system_load_avg: {self.system_load_avg}, \n" \
+                   f"processors_load_avg: {[round(i, 4) for i in self.processors_load_avg]}, \n" \
+                   f"processors_load_std: {round(self.processors_load_std, 4)}, \n" \
+                   f"system_load_avg: {round(self.system_load_avg, 4)}, \n" \
                    f"migrate_requests_amount: {self.migrate_requests_amount}, \n" \
                    f"migrate_amount: {self.migrate_amount} \n"
 
@@ -154,7 +156,7 @@ class Algorithms:
                 if processors_load[processor] <= ALTRUISTIC_GET_TASKS_FROM_OTHER_THRESHOLD:
                     most_loaded_processor = processors_load.index(max(processors_load))
                     result.migrate_requests_amount += 1
-                    if most_loaded_processor > ALTRUISTIC_LOAD_THRESHOLD:
+                    if processors_load[most_loaded_processor] > ALTRUISTIC_LOAD_THRESHOLD:
                         # give task from most_loaded_processor to processor
                         tasks_of_processors = supervisor.get_current_tasks_of_processor(most_loaded_processor)
                         if tasks_of_processors:
