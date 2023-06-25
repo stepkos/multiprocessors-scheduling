@@ -16,3 +16,6 @@ class TaskSupervisor:
 
     def get_tasks_to_assign(self, time):
         return list(filter(lambda task: task.appearance_time == time, self.tasks))
+
+    def get_current_tasks_of_processor(self, processor):
+        return list(filter(lambda task: task.processor == processor, self.tasks))

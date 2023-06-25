@@ -110,8 +110,59 @@ class Algorithms:
                                 break
                         else:
                             processors_load[task.processor] += task.load_level
-
                 time.executing += 1
+
+            for idx in range(AMOUNT_OF_PROCESSORS):
+                result.processors_load_sum[idx] += processors_load[idx]
+
+        return result
+
+    @staticmethod
+    def altruistic_student(supervisor: TaskSupervisor):
+        time = Algorithms.Time()
+        result = Algorithms.Result('altruistic student', time)
+        processors_load = [0] * AMOUNT_OF_PROCESSORS
+
+        while not supervisor.is_done():
+            removed_tasks = supervisor.pop_done_tasks(time.total)
+            for task in removed_tasks:
+                processors_load[task.processor] -= task.load_level
+
+            tasks_to_assign = supervisor.get_tasks_to_assign(time.total)
+            if len(tasks_to_assign) == 0:
+                time.waiting += 1
+            else:
+                # Algorithm main logic
+                for task in tasks_to_assign:
+                    if processors_load[task.processor] < ALTRUISTIC_LOAD_THRESHOLD:
+                        processors_load[task.processor] += task.load_level
+                    else:
+                        processors = list(range(AMOUNT_OF_PROCESSORS))
+                        processors.remove(task.processor)
+                        for processor in random.sample(processors, AMOUNT_OF_PROCESSORS - 1):
+                            result.migrate_requests_amount += 1
+                            if processors_load[processor] < ALTRUISTIC_LOAD_THRESHOLD:
+                                task.processor = processor
+                                processors_load[processor] += task.load_level
+                                result.migrate_amount += 1
+                                break
+                        else:
+                            processors_load[task.processor] += task.load_level
+                time.executing += 1
+
+            for processor in random.sample(range(AMOUNT_OF_PROCESSORS), AMOUNT_OF_PROCESSORS):
+                if processors_load[processor] <= ALTRUISTIC_GET_TASKS_FROM_OTHER_THRESHOLD:
+                    most_loaded_processor = processors_load.index(max(processors_load))
+                    result.migrate_requests_amount += 1
+                    if most_loaded_processor > ALTRUISTIC_LOAD_THRESHOLD:
+                        # give task from most_loaded_processor to processor
+                        tasks_of_processors = supervisor.get_current_tasks_of_processor(most_loaded_processor)
+                        if tasks_of_processors:
+                            task = random.choice(tasks_of_processors)
+                            processors_load[task.processor] -= task.load_level
+                            processors_load[processor] += task.load_level
+                            task.processor = processor
+                            result.migrate_amount += 1
 
             for idx in range(AMOUNT_OF_PROCESSORS):
                 result.processors_load_sum[idx] += processors_load[idx]
